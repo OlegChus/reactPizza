@@ -1,7 +1,7 @@
 import React from 'react';
 import debounce from 'lodash.debounce';
 import { useRef } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { setSearch } from '../../redux/slices/searchSlice';
 import styles from './Search.module.scss';
 
@@ -9,7 +9,7 @@ export const Search = () => {
   const [value, setValue] = React.useState('');
 
   const dispatch = useDispatch();
-  const searchValue = useSelector((state) => state.search.search);
+  // const searchValue = useSelector((state) => state.search.search);
   const inputRef = useRef();
 
   const onClickClear = () => {
@@ -22,12 +22,12 @@ export const Search = () => {
   const updateSearchValue = React.useCallback(
     debounce((str) => {
       dispatch(setSearch(str));
-    }, 500),
+    }, 300),
     [],
   );
 
   const onChangeInput = (event) => {
-    console.log(searchValue);
+    console.log(value);
     setValue(event.target.value);
     updateSearchValue(event.target.value);
   };
