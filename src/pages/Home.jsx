@@ -16,17 +16,31 @@ import axios from 'axios';
 export const Home = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const isSearch = React.useRef(false);
+  const isMounted = React.useRef(false);
 
   const searchValue = useSelector((state) => state.search.search);
   const { categoryId, currentPage } = useSelector((state) => state.filter);
   const sortType = useSelector((state) => state.filter.sort.sortProperty);
 
+  const [pizzas, setPizzas] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
   const onChangeCategory = (id) => {
     dispatch(setCategoryId(id));
   };
 
-  const [pizzas, setPizzas] = React.useState([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const fetchPizzas = () => {
+    setIsLoading(true); //Запуск скелетон
+    axios
+      .get(
+        `${mockapiUrl}page=${currentPage}&limit=8&${category}&sortBy=${sortType}&order=desc${search}`,
+      )
+      .then((response) => {
+        setPizzas(response.data);
+        setIsLoading(false);
+      });
+  };
 
   const onChangePage = (number) => {
     dispatch(setCurrentPage(number));
@@ -36,6 +50,21 @@ export const Home = () => {
   const category = categoryId > 0 ? `category=${categoryId}` : ``;
   const search = searchValue ? `&search=${searchValue}` : '';
 
+  // Ели изменили параметры и был первый рендер
+  React.useEffect(() => {
+    if (isMounted.current) {
+      const queryString = qs.stringify({
+        sortType,
+        categoryId,
+        currentPage,
+      });
+      console.log(queryString);
+      navigate(`?${queryString}`);
+    }
+    isMounted.current = true;
+  }, [categoryId, sortType, currentPage, navigate]);
+
+  // Если был первый рендер, то проверяем URL параметры и сохраняем в Redux
   React.useEffect(() => {
     if (window.location.search) {
       const params = qs.parse(window.location.search.substring(1));
@@ -47,45 +76,19 @@ export const Home = () => {
           sort,
         }),
       );
+      isSearch.current = true;
       console.log(params);
     }
   }, []);
 
+  // Если был первый рендер, то запрашиваем пиццы
   React.useEffect(() => {
-    setIsLoading(true); //Запуск скелетон
-
-    // fetch(
-    //   `${mockapiUrl}page=${currentPage}&limit=8&${category}&sortBy=${sortType.sortProperty}&order=desc${search}`,
-    // )
-    //   .then((res) => res.json())
-    //   .then((json) => {
-    //     // console.log(json);
-    //     setPizzas(json);
-    //     setIsLoading(false); //Выключение скелетон
-    //   });
-
-    axios
-      .get(
-        `${mockapiUrl}page=${currentPage}&limit=8&${category}&sortBy=${sortType}&order=desc${search}`,
-      )
-      .then((response) => {
-        setPizzas(response.data);
-        setIsLoading(false);
-      });
-
     window.scrollTo(0, 0); // возврат вверх страницы
+    if (!isSearch.current) {
+      fetchPizzas();
+    }
+    isSearch.current = false;
   }, [category, sortType, search, currentPage]);
-
-  React.useEffect(() => {
-    const queryString = qs.stringify({
-      sortType,
-      categoryId,
-      currentPage,
-    });
-    navigate(`?${queryString}`);
-
-    console.log(queryString);
-  }, [categoryId, sortType, currentPage, navigate]);
 
   const allPizzaz = pizzas
 

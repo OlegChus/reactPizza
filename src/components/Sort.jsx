@@ -11,6 +11,7 @@ export const list = [
 export function Sort() {
   const dispatch = useDispatch();
   const sort = useSelector((state) => state.filter.sort);
+  const sortRef = React.useRef(false);
 
   const [open, setOpen] = React.useState(false);
   // const [selected, setSelected] = React.useState(0);
@@ -23,8 +24,15 @@ export function Sort() {
     setOpen(false);
   };
 
+  React.useEffect(() => {
+    document.body.addEventListener('click', (event) => {
+      if (event.composedPath().includes(sortRef));
+      console.log('был клик на сорт');
+    });
+  }, []);
+
   return (
-    <div className="sort">
+    <div ref={sortRef} className="sort">
       <div className="sort__label">
         <svg
           width="10"
